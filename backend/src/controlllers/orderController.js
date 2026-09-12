@@ -3,22 +3,27 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 
+// Valid status transitions
+const VALID_TRANSITIONS = {
+  pending: ["confirmed", "cancelled"],
+  confirmed: ["processing", "cancelled"],
+  processing: ["completed"],
+  completed: [],
+  cancelled: [],
+};
+
 const checkout = async (req, res) => {
-  // Start a MongoDB session for transaction
   const session = await mongoose.startSession();
 
   try {
-    
     session.startTransaction();
 
-    //get user's cart
     const cart = await Cart.findOne({
       user: req.user.userId,
     })
       .populate("items.product")
       .session(session);
 
-    //check cart
     if (!cart || cart.items.length === 0) {
       await session.abortTransaction();
       return res.status(400).json({
@@ -29,9 +34,7 @@ const checkout = async (req, res) => {
     let totalAmount = 0;
     const orderItems = [];
 
-    
     for (const item of cart.items) {
-  
       const product = await Product.findOneAndUpdate(
         {
           _id: item.product._id,
@@ -52,7 +55,6 @@ const checkout = async (req, res) => {
       );
 
       if (!product) {
-        
         await session.abortTransaction();
 
         const existingProduct = await Product.findById(
@@ -78,7 +80,6 @@ const checkout = async (req, res) => {
       const subtotal = product.price * item.quantity;
       totalAmount += subtotal;
 
-      //prepare order item
       orderItems.push({
         product: product._id,
         name: product.name,
@@ -88,7 +89,10 @@ const checkout = async (req, res) => {
       });
     }
 
-    // Create the order within the transaction
+    const expiresAt = new Date(
+      Date.now() + 5 * 60 * 1000
+    );
+
     const [order] = await Order.create(
       [
         {
@@ -96,18 +100,17 @@ const checkout = async (req, res) => {
           items: orderItems,
           totalAmount,
           status: "pending",
+          expiresAt,
         },
       ],
       { session }
     );
-
-    // Clear the cart within the transaction
+    
     await Cart.findOneAndDelete(
       { user: req.user.userId },
       { session }
     );
 
-    // Commit transaction — all changes are now permanent
     await session.commitTransaction();
 
     res.status(201).json({
@@ -115,7 +118,6 @@ const checkout = async (req, res) => {
       order,
     });
   } catch (error) {
-    // If anything fails, abort the transaction to roll back all changes
     await session.abortTransaction();
 
     res.status(500).json({
@@ -123,11 +125,229 @@ const checkout = async (req, res) => {
       error: error.message,
     });
   } finally {
-    // Always end the session to free resources
     session.endSession();
+  }
+};
+
+// Get all orders for the logged-in user
+const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      user: req.user.userId,
+    })
+      .sort({ createdAt: -1 })
+      .populate("items.product", "name price image");
+
+    res.status(200).json({
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch orders",
+      error: error.message,
+    });
+  }
+};
+
+// Get all orders (admin only)
+const getAllOrders = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Access denied. Admin only.",
+      });
+    }
+
+    const { status } = req.query;
+
+    const filter = {};
+    if (status) {
+      filter.status = status;
+    }
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("user", "name email")
+      .populate("items.product", "name price image");
+
+    res.status(200).json({
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch orders",
+      error: error.message,
+    });
+  }
+};
+
+// Get single order by ID
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("user", "name email")
+      .populate("items.product", "name price image");
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Users can only view their own orders, admins can view any
+    if (
+      order.user._id.toString() !== req.user.userId &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "Access denied",
+      });
+    }
+
+    res.status(200).json({ order });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch order",
+      error: error.message,
+    });
+  }
+};
+
+// Update order status (admin only)
+const updateOrderStatus = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Access denied. Admin only.",
+      });
+    }
+
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Validate the status transition
+    const allowedTransitions = VALID_TRANSITIONS[order.status];
+
+    if (!allowedTransitions || !allowedTransitions.includes(status)) {
+      return res.status(400).json({
+        message: `Cannot change status from '${order.status}' to '${status}'`,
+        allowedTransitions,
+      });
+    }
+
+    // Handle stock changes based on transition
+    if (status === "confirmed") {
+      // Deduct actual stock and release reservation
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: {
+            stock: -item.quantity,
+            reservedStock: -item.quantity,
+          },
+        });
+      }
+    }
+
+    if (status === "cancelled") {
+      // If cancelling a pending order, release reserved stock
+      if (order.status === "pending") {
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(item.product, {
+            $inc: { reservedStock: -item.quantity },
+          });
+        }
+      }
+
+      // If cancelling a confirmed order, restore actual stock
+      if (order.status === "confirmed") {
+        for (const item of order.items) {
+          await Product.findByIdAndUpdate(item.product, {
+            $inc: { stock: item.quantity },
+          });
+        }
+      }
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.status(200).json({
+      message: `Order status updated to '${status}'`,
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to update order status",
+      error: error.message,
+    });
+  }
+};
+
+// Cancel order (by the user who placed it)
+const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user.userId,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    if (!["pending", "confirmed"].includes(order.status)) {
+      return res.status(400).json({
+        message: `Cannot cancel order with status '${order.status}'`,
+      });
+    }
+
+    // Release stock based on current status
+    if (order.status === "pending") {
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { reservedStock: -item.quantity },
+        });
+      }
+    }
+
+    if (order.status === "confirmed") {
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: item.quantity },
+        });
+      }
+    }
+
+    order.status = "cancelled";
+    await order.save();
+
+    res.status(200).json({
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to cancel order",
+      error: error.message,
+    });
   }
 };
 
 module.exports = {
   checkout,
+  getMyOrders,
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  cancelOrder,
 };

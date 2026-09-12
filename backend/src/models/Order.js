@@ -28,6 +28,7 @@ const orderItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
   },
   {
     _id: false,
@@ -60,6 +61,11 @@ const orderSchema = new mongoose.Schema(
         "cancelled",
       ],
       default: "pending",
+    },
+
+    expiresAt: {
+      type: Date,
+      required: true,
     },
   },
   {

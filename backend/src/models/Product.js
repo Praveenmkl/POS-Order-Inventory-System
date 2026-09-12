@@ -28,7 +28,6 @@ const productSchema = new mongoose.Schema({
     category: {
         type: String,
         trim: true,
-        trim: true,
     },
     description: {
         type: String,
@@ -37,14 +36,9 @@ const productSchema = new mongoose.Schema({
     image: {
         type: String,
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
+},
+{
+    timestamps: true,
 });
 
 module.exports = mongoose.model("Product", productSchema);
