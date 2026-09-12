@@ -4,10 +4,12 @@ const Order = require("../models/Order");
 
 const checkout = async (req, res) => {
   try {
+    //get user's cart
     const cart = await Cart.findOne({
       user: req.user.userId,
     }).populate("items.product");
 
+    //check cart
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({
         message: "Cart is empty",
@@ -16,6 +18,9 @@ const checkout = async (req, res) => {
 
     let totalAmount = 0;
     const orderItems = [];
+
+
+    //check product availability
 
     for (const item of cart.items) {
       const product = await Product.findById(item.product._id);
@@ -26,9 +31,16 @@ const checkout = async (req, res) => {
         });
       }
 
-      if (product.stock < item.quantity) {
+       // Calculate available stock
+      const availableStock =
+        product.stock - product.reservedStock;
+
+         // Check available stock
+      if (availableStock < item.quantity) {
         return res.status(400).json({
-          message: `Not enough stock for ${product.name}`,
+          message: `Not enough available stock for ${product.name}`,
+          availableStock,
+          requestedQuantity: item.quantity,
         });
       }
 
@@ -36,6 +48,7 @@ const checkout = async (req, res) => {
 
       totalAmount += subtotal;
 
+      //prepare order item
       orderItems.push({
         product: product._id,
         name: product.name,
@@ -45,10 +58,18 @@ const checkout = async (req, res) => {
       });
     }
 
-    for (const item of cart.items) {
-      const product = await Product.findById(item.product._id);
+       for (const item of cart.items) {
+      const product = await Product.findById(
+        item.product._id
+      );
 
-      product.stock -= item.quantity;
+      if (!product) {
+        return res.status(404).json({
+          message: `Product not found`,
+        });
+      }
+
+      product.reservedStock += item.quantity;
 
       await product.save();
     }
@@ -65,7 +86,7 @@ const checkout = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Checkout successful",
+      message: "Checkout successful and stock reserved",
       order,
     });
   } catch (error) {
