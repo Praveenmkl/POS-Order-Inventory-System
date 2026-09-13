@@ -5,7 +5,7 @@ const Product = require("../models/Product");
 
 const createProduct = async (req, res) => {
     try {
-        const { name, price, stock, category, description, image } = req.body;
+        const { name, price, stock, category, description } = req.body;
    
         const existingProduct = await Product.findOne({name});
         if(existingProduct){
@@ -20,7 +20,6 @@ const createProduct = async (req, res) => {
             stock,
             category,
             description,
-            image,
         });
 
         res.status(201).json({

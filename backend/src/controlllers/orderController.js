@@ -136,7 +136,7 @@ const getMyOrders = async (req, res) => {
       user: req.user.userId,
     })
       .sort({ createdAt: -1 })
-      .populate("items.product", "name price image");
+      .populate("items.product", "name price");
 
     res.status(200).json({
       count: orders.length,
@@ -169,7 +169,7 @@ const getAllOrders = async (req, res) => {
     const orders = await Order.find(filter)
       .sort({ createdAt: -1 })
       .populate("user", "name email")
-      .populate("items.product", "name price image");
+      .populate("items.product", "name price");
 
     res.status(200).json({
       count: orders.length,
@@ -188,7 +188,7 @@ const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate("user", "name email")
-      .populate("items.product", "name price image");
+      .populate("items.product", "name price");
 
     if (!order) {
       return res.status(404).json({
