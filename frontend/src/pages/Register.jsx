@@ -40,8 +40,14 @@ const Register = () => {
         navigate("/login");
       }, 1500);
     } catch (err) {
+      const backendError =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.details;
       setError(
-        err.response?.data?.message || "Failed to register. Please try again."
+        backendError
+          ? `${backendError}${err.response?.data?.details && err.response?.data?.error ? `: ${err.response.data.details}` : ""}`
+          : "Failed to register. Please check your network connection and try again."
       );
     } finally {
       setIsLoading(false);

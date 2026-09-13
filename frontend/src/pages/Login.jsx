@@ -33,8 +33,14 @@ const Login = () => {
       await login(email, password);
       navigate("/");
     } catch (err) {
+      const backendError =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.details;
       setError(
-        err.response?.data?.message || "Failed to login. Please check your credentials."
+        backendError
+          ? `${backendError}${err.response?.data?.details && err.response?.data?.error ? `: ${err.response.data.details}` : ""}`
+          : "Failed to login. Please check your network connection and credentials."
       );
     } finally {
       setIsLoading(false);
