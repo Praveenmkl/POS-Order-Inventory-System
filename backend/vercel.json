@@ -14,7 +14,8 @@
     ],
     "crons": [
         {
-            "version": 2
+            "path": "/api/orders/release-expired",
+            "schedule": "* * * * *"
         }
     ]
 }
