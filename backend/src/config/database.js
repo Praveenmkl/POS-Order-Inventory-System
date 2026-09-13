@@ -8,6 +8,9 @@ const conncetDB = async () => {
         return;
     }
     try {
+        if (!process.env.MONGODB_URI) {
+            throw new Error("MONGODB_URI environment variable is missing");
+        }
         const db = await mongoose.connect(process.env.MONGODB_URI);
         isConnected = mongoose.connection.readyState === 1;
         console.log(" MongoDB Connected ");
