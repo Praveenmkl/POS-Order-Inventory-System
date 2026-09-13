@@ -137,7 +137,7 @@ const ProductForm = ({ open, onOpenChange, product, onSaved }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="prod-price">Price (₹) *</Label>
+              <Label htmlFor="prod-price">Price (Rs.) *</Label>
               <Input
                 id="prod-price"
                 type="number"
@@ -387,7 +387,7 @@ const Products = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-bold">
-                        ₹{Number(product.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        Rs. {Number(product.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-6 py-4">{stockBadge(available)}</td>
                       <td className="px-6 py-4">

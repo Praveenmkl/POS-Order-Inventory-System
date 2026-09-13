@@ -131,11 +131,11 @@ const OrderDetailModal = ({ open, onOpenChange, order, onStatusUpdate, isAdmin }
                   <div>
                     <p className="font-semibold">{item.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      ₹{Number(item.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })} × {item.quantity}
+                      Rs. {Number(item.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })} × {item.quantity}
                     </p>
                   </div>
                   <p className="font-bold">
-                    ₹{Number(item.subtotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    Rs. {Number(item.subtotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               ))}
@@ -143,7 +143,7 @@ const OrderDetailModal = ({ open, onOpenChange, order, onStatusUpdate, isAdmin }
             <Separator className="my-3" />
             <div className="flex justify-between font-bold text-base">
               <span>Total</span>
-              <span>₹{Number(order.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              <span>Rs. {Number(order.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
 
@@ -420,7 +420,7 @@ const Orders = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right font-bold">
-                      ₹{Number(order.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      Rs. {Number(order.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4 text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(order.createdAt).toLocaleDateString("en-IN", {

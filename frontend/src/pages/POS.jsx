@@ -70,7 +70,7 @@ const ProductCard = ({ product, onAdd }) => {
 
       <div className="mt-3 flex items-center justify-between border-t pt-2">
         <p className="text-base font-bold text-zinc-900">
-          ₹{Number(product.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          Rs. {Number(product.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
         </p>
         {!outOfStock && (
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black text-white group-hover:bg-zinc-800 transition-colors">
@@ -88,7 +88,7 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => (
     <div className="flex-1 min-w-0">
       <p className="text-sm font-semibold leading-tight truncate">{item.name}</p>
       <p className="text-xs text-muted-foreground">
-        ₹{Number(item.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })} each
+        Rs. {Number(item.price).toLocaleString("en-IN", { minimumFractionDigits: 2 })} each
       </p>
     </div>
     <div className="flex items-center gap-1">
@@ -112,7 +112,7 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => (
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm font-bold min-w-[64px] text-right">
-        ₹{(item.price * item.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+        Rs. {(item.price * item.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
       </span>
       <Button
         size="icon"
@@ -181,7 +181,7 @@ const PaymentModal = ({ open, onOpenChange, order, cartItems, total, onSuccess }
               <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 px-6 py-3 w-full">
                 <p className="text-sm text-emerald-700 font-medium">Change to return</p>
                 <p className="text-2xl font-bold text-emerald-700">
-                  ₹{change.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  Rs. {change.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </p>
               </div>
             )}
@@ -206,14 +206,14 @@ const PaymentModal = ({ open, onOpenChange, order, cartItems, total, onSuccess }
                       {item.name} × {item.quantity}
                     </span>
                     <span className="font-medium">
-                      ₹{(item.price * item.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      Rs. {(item.price * item.quantity).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 ))}
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-base">
                   <span>Total</span>
-                  <span>₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <span>Rs. {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
 
@@ -244,13 +244,13 @@ const PaymentModal = ({ open, onOpenChange, order, cartItems, total, onSuccess }
               {/* Cash: amount tendered */}
               {method === "cash" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="tendered">Amount Tendered (₹)</Label>
+                  <Label htmlFor="tendered">Amount Tendered (Rs.)</Label>
                   <Input
                     id="tendered"
                     type="number"
                     min={total}
                     step="1"
-                    placeholder={`Minimum ₹${total.toFixed(2)}`}
+                    placeholder={`Minimum Rs. ${total.toFixed(2)}`}
                     value={amountTendered}
                     onChange={(e) => setAmountTendered(e.target.value)}
                   />
@@ -258,7 +258,7 @@ const PaymentModal = ({ open, onOpenChange, order, cartItems, total, onSuccess }
                     <div className="flex justify-between rounded-lg bg-emerald-50 border border-emerald-200 p-3">
                       <span className="text-sm text-emerald-700 font-medium">Change</span>
                       <span className="text-sm font-bold text-emerald-700">
-                        ₹{change.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        Rs. {change.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   )}
@@ -485,13 +485,13 @@ const POS = () => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal ({itemCount} items)</span>
-                <span>₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                <span>Rs. {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
               </div>
               <Separator />
               <div className="flex justify-between text-base font-bold">
                 <span>Total</span>
                 <span className="text-zinc-900 text-lg font-bold">
-                  ₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  Rs. {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
@@ -505,7 +505,7 @@ const POS = () => {
               ) : (
                 <>
                   <CreditCard className="h-4 w-4" />
-                  Checkout · ₹{total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  Checkout · Rs. {total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </>
               )}
             </Button>

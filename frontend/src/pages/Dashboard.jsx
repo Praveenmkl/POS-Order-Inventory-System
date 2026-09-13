@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import productService from "@/services/productService";
 import orderService from "@/services/orderService";
+import { useAuth } from "@/context/AuthContext";
 
 const STATUS_CONFIG = {
   pending:    { label: "Pending",    className: "bg-amber-100 text-amber-700 border-amber-200" },
@@ -48,6 +49,9 @@ const StatCard = ({ icon: Icon, label, value, sub, color, loading }) => (
 );
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +63,7 @@ const Dashboard = () => {
     try {
       const [prodRes, ordRes] = await Promise.all([
         productService.getAll(),
-        orderService.getAll(),
+        isAdmin ? orderService.getAll() : orderService.getMyOrders(),
       ]);
       setProducts(prodRes.data?.products || prodRes.data || []);
       setOrders(ordRes.data?.orders || ordRes.data || []);
@@ -68,7 +72,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -98,7 +102,7 @@ const Dashboard = () => {
     {
       icon: TrendingUp,
       label: "Total Revenue",
-      value: `₹${totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      value: `Rs. ${totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       sub: "From completed orders",
       color: "bg-emerald-500",
     },
@@ -262,7 +266,7 @@ const Dashboard = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right font-semibold">
-                          ₹{(order.totalAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          Rs. {(order.totalAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">
                           {new Date(order.createdAt).toLocaleDateString("en-IN", {
