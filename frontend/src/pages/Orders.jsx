@@ -42,16 +42,18 @@ const STATUS_CONFIG = {
   processing: { label: "Processing", color: "bg-zinc-100 text-zinc-700 border-zinc-200", dot: "bg-zinc-600",  icon: Loader },
   completed:  { label: "Completed",  color: "bg-emerald-100 text-emerald-700 border-emerald-200", dot: "bg-emerald-500", icon: CheckCircle },
   cancelled:  { label: "Cancelled",  color: "bg-red-100 text-red-700 border-red-200",          dot: "bg-red-500",     icon: XCircle },
+  refunded:   { label: "Refunded",   color: "bg-blue-100 text-blue-700 border-blue-200", dot: "bg-blue-500",  icon: RefreshCw },
 };
 
-const TABS = ["all", "pending", "confirmed", "processing", "completed", "cancelled"];
+const TABS = ["all", "pending", "confirmed", "processing", "completed", "cancelled", "refunded"];
 
 const VALID_TRANSITIONS = {
   pending: ["confirmed", "cancelled"],
-  confirmed: ["processing", "cancelled"],
-  processing: ["completed"],
-  completed: [],
+  confirmed: ["processing", "cancelled", "refunded"],
+  processing: ["completed", "refunded"],
+  completed: ["refunded"],
   cancelled: [],
+  refunded: [],
 };
 
 /* ─── Order Detail Modal ─────────────────────────────────────────── */
@@ -196,6 +198,8 @@ const Orders = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [refundTarget, setRefundTarget] = useState(null);
+  const [refunding, setRefunding] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -228,6 +232,23 @@ const Orders = () => {
       toast.error(err.response?.data?.message || "Failed to cancel order");
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleRefundOrder = async () => {
+    if (!refundTarget) return;
+    setRefunding(true);
+    try {
+      await orderService.refund(refundTarget._id);
+      toast.success("Order refunded and stock restored");
+      setRefundTarget(null);
+      setOrders((prev) =>
+        prev.map((o) => o._id === refundTarget._id ? { ...o, status: "refunded" } : o)
+      );
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to refund order");
+    } finally {
+      setRefunding(false);
     }
   };
 
@@ -392,6 +413,7 @@ const Orders = () => {
               {filtered.map((order) => {
                 const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
                 const canCancel = ["pending", "confirmed"].includes(order.status);
+                const canRefund = ["completed", "confirmed"].includes(order.status);
                 return (
                   <tr
                     key={order._id}
@@ -451,6 +473,16 @@ const Orders = () => {
                             Cancel
                           </Button>
                         )}
+                        {canRefund && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700 font-semibold"
+                            onClick={() => setRefundTarget(order)}
+                          >
+                            Refund
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -479,6 +511,17 @@ const Orders = () => {
         onConfirm={handleCancelOrder}
         confirmLabel="Cancel Order"
         isLoading={cancelling}
+      />
+
+      {/* Refund Confirmation */}
+      <ConfirmDialog
+        open={!!refundTarget}
+        onOpenChange={(v) => { if (!v) setRefundTarget(null); }}
+        title="Refund Order?"
+        description={`Order #${refundTarget?._id?.slice(-8).toUpperCase()} will be refunded and inventory stock restored.`}
+        onConfirm={handleRefundOrder}
+        confirmLabel="Confirm Refund"
+        isLoading={refunding}
       />
     </div>
   );

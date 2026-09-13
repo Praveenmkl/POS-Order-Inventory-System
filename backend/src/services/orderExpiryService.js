@@ -11,40 +11,33 @@ const releaseExpiredOrders = async () => {
     });
 
     for (const order of expiredOrders) {
-      // Release reserved stock
-      for (const item of order.items) {
-        const product = await Product.findById(
-          item.product
-        );
-
-        if (!product) {
-          continue;
-        }
-
-        product.reservedStock -= item.quantity;
-
-        // Prevent negative reserved stock
-        if (product.reservedStock < 0) {
-          product.reservedStock = 0;
-        }
-
-        await product.save();
-      }
-
-      // Cancel order
-      order.status = "cancelled";
-
-      await order.save();
-
-      console.log(
-        `Order ${order._id} expired and cancelled`
+      // Atomically transition status from pending to cancelled to avoid race conditions with payment
+      const cancelledOrder = await Order.findOneAndUpdate(
+        { _id: order._id, status: "pending" },
+        { status: "cancelled" },
+        { returnDocument: "after" }
       );
+
+      if (cancelledOrder) {
+        // Release reserved stock atomically
+        for (const item of order.items) {
+          if (item.product) {
+            await Product.findByIdAndUpdate(item.product, {
+              $inc: { reservedStock: -item.quantity },
+            });
+
+            // Prevent negative reserved stock
+            await Product.updateOne(
+              { _id: item.product, reservedStock: { $lt: 0 } },
+              { $set: { reservedStock: 0 } }
+            );
+          }
+        }
+        console.log(`Order ${order._id} expired, cancelled, and stock released`);
+      }
     }
   } catch (error) {
-    console.error(
-      "Failed to process expired orders:",
-      error.message
-    );
+    console.error("Failed to process expired orders:", error.message);
   }
 };
 

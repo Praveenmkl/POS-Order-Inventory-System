@@ -66,7 +66,7 @@ const makePayment = async (req, res) => {
         });
       }
 
-      order.status = "confirmed";
+      order.status = "completed";
       await order.save();
 
       return res.status(200).json({
