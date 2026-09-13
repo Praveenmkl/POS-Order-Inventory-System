@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+import Logo from "@/components/common/Logo";
+
 const Sidebar = ({ onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,25 +32,17 @@ const Sidebar = ({ onClose }) => {
   };
 
   const navItems = [
-    { label: "Dashboard",  icon: LayoutDashboard, path: "/" },
-    { label: "POS",        icon: ShoppingCart,    path: "/pos",      badge: itemCount > 0 ? itemCount : null },
-    { label: "Products",   icon: Package,          path: "/products" },
-    { label: "Orders",     icon: ClipboardList,    path: "/orders" },
+    { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+    { label: "POS", icon: ShoppingCart, path: "/pos", badge: itemCount > 0 ? itemCount : null },
+    { label: "Products", icon: Package, path: "/products" },
+    { label: "Orders", icon: ClipboardList, path: "/orders" },
   ];
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-background shadow-lg lg:shadow-none">
       {/* Logo / Brand */}
       <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white font-bold text-sm shadow-sm">
-            P
-          </div>
-          <div>
-            <h1 className="text-base font-bold leading-none">POS Manager</h1>
-            <span className="text-xs text-muted-foreground">Inventory & Sales</span>
-          </div>
-        </div>
+        <Logo size="md" />
         {/* Close button for mobile */}
         {onClose && (
           <button
@@ -76,11 +70,10 @@ const Sidebar = ({ onClose }) => {
               key={item.path}
               to={item.path}
               onClick={onClose}
-              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
-                isActive
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 ${isActive
                   ? "bg-black text-white shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+                }`}
             >
               <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? "text-white" : ""}`} />
               <span className="flex-1">{item.label}</span>

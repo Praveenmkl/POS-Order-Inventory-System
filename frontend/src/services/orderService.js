@@ -7,6 +7,7 @@ export const orderService = {
   getById: (id) => API.get(`/orders/${id}`),
   updateStatus: (id, status) => API.patch(`/orders/${id}/status`, { status }),
   cancel: (id) => API.patch(`/orders/${id}/cancel`),
+  refund: (id) => API.post(`/orders/${id}/refund`),
 };
 
 export default orderService;

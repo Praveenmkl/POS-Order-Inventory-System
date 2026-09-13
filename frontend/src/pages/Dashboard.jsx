@@ -77,7 +77,7 @@ const Dashboard = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const totalRevenue = orders
-    .filter((o) => o.status === "completed")
+    .filter((o) => o.status === "completed" || o.status === "confirmed")
     .reduce((s, o) => s + (o.totalAmount || 0), 0);
 
   const todayOrders = orders.filter((o) => {

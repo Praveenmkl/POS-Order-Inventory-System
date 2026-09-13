@@ -6,26 +6,43 @@ const Order = require("../models/Order");
 // Valid status transitions
 const VALID_TRANSITIONS = {
   pending: ["confirmed", "cancelled"],
-  confirmed: ["processing", "cancelled"],
-  processing: ["completed"],
-  completed: [],
+  confirmed: ["processing", "cancelled", "refunded"],
+  processing: ["completed", "refunded"],
+  completed: ["refunded"],
   cancelled: [],
+  refunded: [],
 };
 
 const checkout = async (req, res) => {
-  const session = await mongoose.startSession();
-
   try {
-    session.startTransaction();
+    let cartItemsToProcess = [];
 
-    const cart = await Cart.findOne({
-      user: req.user.userId,
-    })
-      .populate("items.product")
-      .session(session);
+    // 1. If POS sends items in req.body.items, use them
+    if (req.body?.items && Array.isArray(req.body.items) && req.body.items.length > 0) {
+      for (const item of req.body.items) {
+        const productId = item.product || item._id;
+        const product = await Product.findById(productId);
+        if (product) {
+          cartItemsToProcess.push({
+            product,
+            quantity: item.quantity || 1,
+          });
+        }
+      }
+    } else {
+      // 2. Otherwise fetch from DB cart
+      const cart = await Cart.findOne({
+        user: req.user.userId,
+      }).populate("items.product");
 
-    if (!cart || cart.items.length === 0) {
-      await session.abortTransaction();
+      if (cart && cart.items.length > 0) {
+        cartItemsToProcess = cart.items
+          .filter((i) => i.product)
+          .map((i) => ({ product: i.product, quantity: i.quantity }));
+      }
+    }
+
+    if (cartItemsToProcess.length === 0) {
       return res.status(400).json({
         message: "Cart is empty",
       });
@@ -34,98 +51,85 @@ const checkout = async (req, res) => {
     let totalAmount = 0;
     const orderItems = [];
 
-    for (const item of cart.items) {
-      const product = await Product.findOneAndUpdate(
+    for (const item of cartItemsToProcess) {
+      const productId = item.product._id || item.product;
+      const quantity = item.quantity;
+
+      // ATOMIC CONCURRENCY CHECK: Increment reservedStock ONLY if (stock - reservedStock) >= quantity
+      const updatedProduct = await Product.findOneAndUpdate(
         {
-          _id: item.product._id,
+          _id: productId,
           $expr: {
             $gte: [
-              { $subtract: ["$stock", "$reservedStock"] },
-              item.quantity,
+              { $subtract: ["$stock", { $ifNull: ["$reservedStock", 0] }] },
+              quantity,
             ],
           },
         },
         {
-          $inc: { reservedStock: item.quantity },
+          $inc: { reservedStock: quantity },
         },
-        {
-          new: true,
-          session,
-        }
+        { returnDocument: "after" }
       );
 
-      if (!product) {
-        await session.abortTransaction();
-
-        const existingProduct = await Product.findById(
-          item.product._id
-        );
-
-        if (!existingProduct) {
-          return res.status(404).json({
-            message: `Product not found: ${item.product.name}`,
+      if (!updatedProduct) {
+        // Rollback any stock reserved in earlier items of this checkout
+        for (const reserved of orderItems) {
+          await Product.findByIdAndUpdate(reserved.product, {
+            $inc: { reservedStock: -reserved.quantity },
           });
         }
 
-        const availableStock =
-          existingProduct.stock - existingProduct.reservedStock;
+        const existingProduct = await Product.findById(productId);
+        const available = existingProduct
+          ? existingProduct.stock - (existingProduct.reservedStock || 0)
+          : 0;
 
         return res.status(400).json({
-          message: `Not enough available stock for ${existingProduct.name}`,
-          availableStock,
-          requestedQuantity: item.quantity,
+          message: existingProduct
+            ? `Not enough available stock for ${existingProduct.name}`
+            : "Product not found",
+          availableStock: available,
+          requestedQuantity: quantity,
         });
       }
 
-      const subtotal = product.price * item.quantity;
+      // Security: Always use price straight from the database!
+      const subtotal = updatedProduct.price * quantity;
       totalAmount += subtotal;
 
       orderItems.push({
-        product: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: item.quantity,
+        product: updatedProduct._id,
+        name: updatedProduct.name,
+        price: updatedProduct.price,
+        quantity: quantity,
         subtotal,
       });
     }
 
-    const expiresAt = new Date(
-      Date.now() + 5 * 60 * 1000
-    );
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    const [order] = await Order.create(
-      [
-        {
-          user: req.user.userId,
-          items: orderItems,
-          totalAmount,
-          status: "pending",
-          expiresAt,
-        },
-      ],
-      { session }
-    );
-    
-    await Cart.findOneAndDelete(
-      { user: req.user.userId },
-      { session }
-    );
+    const order = await Order.create({
+      user: req.user.userId,
+      items: orderItems,
+      totalAmount,
+      status: "pending",
+      expiresAt,
+    });
 
-    await session.commitTransaction();
+    // Clear DB cart if it exists
+    await Cart.findOneAndDelete({ user: req.user.userId });
 
     res.status(201).json({
       message: "Checkout successful and stock reserved",
       order,
     });
   } catch (error) {
-    await session.abortTransaction();
-
+    console.error("Checkout failed error:", error);
     res.status(500).json({
       message: "Checkout failed",
       error: error.message,
     });
-  } finally {
-    session.endSession();
   }
 };
 
@@ -343,6 +347,56 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+// Refund order (Admin or Order owner for paid orders)
+const refundOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    if (
+      order.user.toString() !== req.user.userId &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message: "Access denied",
+      });
+    }
+
+    if (!["completed", "confirmed"].includes(order.status)) {
+      return res.status(400).json({
+        message: `Cannot refund order with status '${order.status}'. Only paid/completed orders can be refunded.`,
+      });
+    }
+
+    // Restore physical stock
+    for (const item of order.items) {
+      if (item.product) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: item.quantity },
+        });
+      }
+    }
+
+    order.status = "refunded";
+    await order.save();
+
+    res.status(200).json({
+      message: "Order refunded successfully and stock restored",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to refund order",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   checkout,
   getMyOrders,
@@ -350,4 +404,5 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   cancelOrder,
+  refundOrder,
 };
