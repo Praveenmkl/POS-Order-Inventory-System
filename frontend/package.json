@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/vite/bin/vite.js",
-    "build": "tsc -b && node ./node_modules/vite/bin/vite.js build",
+    "dev": "vite",
+    "build": "vite build",
     "lint": "oxlint",
-    "preview": "node ./node_modules/vite/bin/vite.js preview"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
