@@ -10,7 +10,7 @@ const {
   refundOrder,
 } = require("../controlllers/orderController");
 
-const { protect } = require("../middleware/authMiddleware");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -19,10 +19,10 @@ router.post("/checkout", protect, checkout);
 router.get("/my-orders", protect, getMyOrders);
 router.get("/:id", protect, getOrderById);
 router.patch("/:id/cancel", protect, cancelOrder);
-router.post("/:id/refund", protect, refundOrder);
+router.post("/:id/refund", protect, authorizeRoles("admin"), refundOrder);
 
 // Admin routes
-router.get("/", protect, getAllOrders);
-router.patch("/:id/status", protect, updateOrderStatus);
+router.get("/", protect, authorizeRoles("admin"), getAllOrders);
+router.patch("/:id/status", protect, authorizeRoles("admin"), updateOrderStatus);
 
 module.exports = router;

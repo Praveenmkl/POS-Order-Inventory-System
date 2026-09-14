@@ -7,6 +7,17 @@ const productSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    sku: {
+        type: String,
+        trim: true,
+        unique: true,
+        sparse: true,
+    },
+    status: {
+        type: String,
+        enum: ["active", "inactive"],
+        default: "active",
+    },
     price: {
         type: Number,
         required: true,

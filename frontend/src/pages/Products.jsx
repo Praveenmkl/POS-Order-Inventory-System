@@ -62,12 +62,12 @@ const ProductForm = ({ open, onOpenChange, product, onSaved }) => {
       setForm(
         isEdit
           ? {
-              name: product.name || "",
-              price: product.price ?? "",
-              stock: product.stock ?? "",
-              category: product.category || "",
-              description: product.description || "",
-            }
+            name: product.name || "",
+            price: product.price ?? "",
+            stock: product.stock ?? "",
+            category: product.category || "",
+            description: product.description || "",
+          }
           : EMPTY_FORM
       );
       setErrors({});

@@ -5,6 +5,7 @@ import {
   ClipboardList,
   LogOut,
   X,
+  Users as UsersIcon,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -31,12 +32,16 @@ const Sidebar = ({ onClose }) => {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
   };
 
-  const navItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  const allNavItems = [
+    { label: "Dashboard", icon: LayoutDashboard, path: "/", adminOnly: true },
     { label: "POS", icon: ShoppingCart, path: "/pos", badge: itemCount > 0 ? itemCount : null },
-    { label: "Products", icon: Package, path: "/products" },
-    { label: "Orders", icon: ClipboardList, path: "/orders" },
+    { label: "Products", icon: Package, path: "/products", adminOnly: true },
+    { label: "Orders", icon: ClipboardList, path: "/orders", adminOnly: true },
+    { label: "Users", icon: UsersIcon, path: "/users", adminOnly: true },
   ];
+
+  const navItems = allNavItems.filter((item) => !item.adminOnly || user?.role === "admin");
+
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-background shadow-lg lg:shadow-none">

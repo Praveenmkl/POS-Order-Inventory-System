@@ -4,6 +4,8 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+import AdminRoute from "./components/auth/AdminRoute";
+
 import DashboardLayout from "./components/layout/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
@@ -11,6 +13,7 @@ import Products from "./pages/Products";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Users from "./pages/Users";
 
 function App() {
   return (
@@ -25,10 +28,15 @@ function App() {
             {/* Protected Dashboard Routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout />}>
-                <Route path="/" element={<Dashboard />} />
                 <Route path="/pos" element={<POS />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/orders" element={<Orders />} />
+                
+                {/* Admin Only Routes */}
+                <Route element={<AdminRoute />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/users" element={<Users />} />
+                </Route>
               </Route>
             </Route>
 
