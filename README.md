@@ -6,8 +6,8 @@ A full-stack Point of Sale (POS) and Real-Time Inventory Management System with 
 
 ## 🌐 1. Live Deployment Links
 
-- **Frontend**: [https://pos-order-inventory-system-frontend.vercel.app](https://pos-order-inventory-system-frontend.vercel.app)
-- **Backend API**: [https://pos-order-inventory-system-backend.vercel.app](https://pos-order-inventory-system-backend.vercel.app)
+- **Frontend**: https://pos-order-inventory-system-47plt6nnf.vercel.app
+- **Backend API**: https://pos-order-inventory-system-oep8.vercel.app/
 - **GitHub Repository**: [https://github.com/Praveenmkl/POS-Order-Inventory-System](https://github.com/Praveenmkl/POS-Order-Inventory-System)
 
 ---
