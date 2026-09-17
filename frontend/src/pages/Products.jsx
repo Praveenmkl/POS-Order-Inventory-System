@@ -314,7 +314,7 @@ const Products = () => {
               value={categoryFilter}
               onValueChange={setCategoryFilter}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -352,8 +352,8 @@ const Products = () => {
               <span className="font-semibold text-foreground">{products.length}</span> products
             </span>
           </div>
-          <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
+            <table className="w-full text-sm min-w-[800px]">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="px-6 py-3.5 text-left font-semibold text-muted-foreground">Product</th>

@@ -99,8 +99,8 @@ const Users = () => {
         <Button onClick={() => openForm()}><Plus className="h-4 w-4 mr-2" /> Add User</Button>
       </div>
 
-      <div className="rounded-xl border bg-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-xl border bg-card">
+        <table className="w-full text-sm min-w-[600px]">
           <thead className="bg-muted/50 border-b">
             <tr>
               <th className="px-6 py-3 text-left font-semibold">Name</th>

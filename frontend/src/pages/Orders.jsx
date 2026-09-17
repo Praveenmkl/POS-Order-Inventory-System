@@ -397,8 +397,8 @@ const Orders = () => {
           description={search ? "Try different keywords." : "Orders will appear here once placed from POS."}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
+          <table className="w-full text-sm min-w-[800px]">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="px-6 py-3.5 text-left font-semibold text-muted-foreground">Order ID</th>

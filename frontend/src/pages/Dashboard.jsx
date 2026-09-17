@@ -239,7 +239,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-6 py-3 text-left font-medium text-muted-foreground">Order ID</th>
@@ -289,11 +289,11 @@ const Dashboard = () => {
       {/* Low Stock Alert */}
       {!loading && lowStock > 0 && (
         <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-200">
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-200">
               <AlertTriangle className="h-5 w-5 text-amber-700" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <p className="font-semibold text-amber-800">
                 {lowStock} product{lowStock > 1 ? "s are" : " is"} running low on stock
               </p>
@@ -301,10 +301,10 @@ const Dashboard = () => {
                 Consider restocking soon to avoid running out.
               </p>
             </div>
-            <Link to="/products">
+            <Link to="/products" className="w-full sm:w-auto mt-2 sm:mt-0">
               <Button
                 size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white"
+                className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white"
               >
                 View Products
               </Button>

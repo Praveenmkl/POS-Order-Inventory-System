@@ -349,9 +349,9 @@ const POS = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-0 -m-6">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-4rem)] gap-0 -m-4 lg:-m-6">
       {/* ── Left: Product Catalog ─────────────────────────────── */}
-      <div className="flex flex-1 flex-col overflow-hidden border-r bg-background">
+      <div className="flex flex-1 flex-col overflow-hidden bg-background">
         {/* Search + Category bar */}
         <div className="border-b bg-background p-4 space-y-3">
           <div className="relative">
@@ -428,7 +428,7 @@ const POS = () => {
       </div>
 
       {/* ── Right: Cart ──────────────────────────────────────── */}
-      <div className="flex w-80 flex-col bg-background lg:w-96">
+      <div className="flex w-full lg:w-96 flex-col bg-background h-[45vh] lg:h-full border-t lg:border-t-0 lg:border-l shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.1)] lg:shadow-none z-10">
         {/* Cart Header */}
         <div className="flex items-center justify-between border-b p-4">
           <div className="flex items-center gap-2">
