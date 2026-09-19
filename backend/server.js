@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 
 const connectDB = require("./src/config/database");
+const seedAdmin = require("./src/utils/seedAdmin");
 const productRoutes = require("./src/routes/productRoutes");
 const authRoutes = require('./src/routes/authRoutes');
 const cartRoutes = require("./src/routes/cartRoutes");
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(async (req, res, next) => {
   try {
     await connectDB();
+    await seedAdmin();
     next();
   } catch (err) {
     res.status(500).json({ error: "Database connection failed", details: err.message });
