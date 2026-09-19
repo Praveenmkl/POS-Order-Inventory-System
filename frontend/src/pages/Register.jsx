@@ -1,10 +1,6 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-
+import { Link } from "react-router-dom";
+import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -12,140 +8,39 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import Logo from "@/components/common/Logo";
 
 const Register = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("cashier");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { register } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setIsLoading(true);
-
-    try {
-      await register(name, email, password, role);
-      setSuccess("Account created successfully! Redirecting to login...");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-    } catch (err) {
-      const backendError =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.response?.data?.details;
-      setError(
-        backendError
-          ? `${backendError}${err.response?.data?.details && err.response?.data?.error ? `: ${err.response.data.details}` : ""}`
-          : "Failed to register. Please check your network connection and try again."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
       <div className="mb-6">
         <Logo size="lg" />
       </div>
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-          <CardDescription>Create your POS account to continue</CardDescription>
+      <Card className="w-full max-w-md text-center shadow-lg">
+        <CardHeader className="flex flex-col items-center pb-2">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Public Registration Disabled</CardTitle>
+          <CardDescription className="mt-2 text-sm text-muted-foreground">
+            Self-service user registration is disabled on this Point of Sale system.
+          </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          {error && (
-            <div className="mb-4 rounded-md bg-destructive/15 p-3 text-sm text-destructive font-medium">
-              {error}
-            </div>
-          )}
+        <CardContent className="space-y-6 pt-4">
+          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 text-left">
+            <p className="font-semibold mb-1">Looking for account access?</p>
+            <p>Cashiers and staff accounts must be created by an Administrator from the Cashier Management dashboard.</p>
+          </div>
 
-          {success && (
-            <div className="mb-4 rounded-md bg-emerald-500/15 p-3 text-sm text-emerald-600 font-medium">
-              {success}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Create a strong password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                disabled={isLoading}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="cashier">Cashier</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create Account"}
+          <div className="flex flex-col gap-2">
+            <Button asChild className="w-full">
+              <Link to="/login">Go to Cashier Login</Link>
             </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-foreground underline hover:text-primary"
-            >
-              Login
-            </Link>
-          </p>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/admin/login">Go to Admin Portal</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

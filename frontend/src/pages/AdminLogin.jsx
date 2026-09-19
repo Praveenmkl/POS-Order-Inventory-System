@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { ShieldCheck, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,13 +16,13 @@ import {
 
 import Logo from "@/components/common/Logo";
 
-const Login = () => {
+const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -33,11 +34,13 @@ const Login = () => {
       const res = await login(email, password);
       const userRole = res.user?.role ? String(res.user.role).toUpperCase() : "";
 
-      if (userRole === "CASHIER") {
-        navigate("/pos");
-      } else {
-        navigate("/admin/dashboard");
+      // Enforce Admin role
+      if (userRole !== "ADMIN") {
+        logout();
+        setError("Access Denied: Admin privileges required. Cashiers must use the standard login screen.");
+        return;
       }
+      navigate("/admin/dashboard");
     } catch (err) {
       const backendError =
         err.response?.data?.message ||
@@ -46,7 +49,7 @@ const Login = () => {
       setError(
         backendError
           ? `${backendError}${err.response?.data?.details && err.response?.data?.error ? `: ${err.response.data.details}` : ""}`
-          : "Failed to login. Please check your credentials and network connection."
+          : "Failed to authenticate as Admin. Please check your credentials."
       );
     } finally {
       setIsLoading(false);
@@ -55,29 +58,39 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col items-center">
         <Logo size="lg" />
+        <div className="mt-3 flex items-center gap-1.5 rounded-full bg-black/5 dark:bg-white/10 px-3 py-1 text-xs font-semibold text-foreground border border-black/10 dark:border-white/10">
+          <ShieldCheck className="h-4 w-4 text-black dark:text-white" />
+          <span>Admin Portal</span>
+        </div>
       </div>
-      <Card className="w-full max-w-md shadow-lg">
+
+      <Card className="w-full max-w-md shadow-lg border bg-card text-card-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">POS Terminal Login</CardTitle>
-          <CardDescription>Sign in to open sales register or terminal</CardDescription>
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-foreground">
+            <Lock className="h-6 w-6" />
+          </div>
+          <CardTitle className="text-2xl font-bold tracking-tight">Admin Authentication</CardTitle>
+          <CardDescription>
+            Authorized management personnel only
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
           {error && (
-            <div className="mb-4 rounded-md bg-destructive/15 p-3 text-sm text-destructive font-medium">
+            <div className="mb-4 rounded-md bg-destructive/15 p-3 text-sm font-medium text-destructive">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email / Staff Account</Label>
+              <Label htmlFor="admin-email">Admin Email</Label>
               <Input
-                id="email"
+                id="admin-email"
                 type="email"
-                placeholder="cashier@example.com"
+                placeholder="admin@pos.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -86,11 +99,11 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="admin-password">Password</Label>
               <Input
-                id="password"
+                id="admin-password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -99,17 +112,17 @@ const Login = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In to Terminal"}
+              {isLoading ? "Authenticating..." : "Access Admin Portal"}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground border-t pt-4">
-            System Administrator?{" "}
+            Looking for Cashier Terminal?{" "}
             <Link
-              to="/admin/login"
+              to="/login"
               className="font-medium text-foreground underline hover:text-primary"
             >
-              Admin Portal Login
+              Cashier Login
             </Link>
           </p>
         </CardContent>
@@ -118,4 +131,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;

@@ -22,9 +22,12 @@ const Sidebar = ({ onClose }) => {
   const { logout, user } = useAuth();
   const { itemCount } = useCart();
 
+  const userRoleUpper = user?.role ? String(user.role).toUpperCase() : "";
+  const isAdmin = userRoleUpper === "ADMIN";
+
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate(isAdmin ? "/admin/login" : "/login");
   };
 
   const getInitials = (name) => {
@@ -33,14 +36,14 @@ const Sidebar = ({ onClose }) => {
   };
 
   const allNavItems = [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/", adminOnly: true },
-    { label: "POS", icon: ShoppingCart, path: "/pos", badge: itemCount > 0 ? itemCount : null },
-    { label: "Products", icon: Package, path: "/products", adminOnly: true },
-    { label: "Orders", icon: ClipboardList, path: "/orders", adminOnly: true },
-    { label: "Users", icon: UsersIcon, path: "/users", adminOnly: true },
+    { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard", adminOnly: true },
+    { label: "POS Terminal", icon: ShoppingCart, path: "/pos", badge: itemCount > 0 ? itemCount : null },
+    { label: "Products", icon: Package, path: "/admin/products", adminOnly: true },
+    { label: "Orders", icon: ClipboardList, path: "/admin/orders", adminOnly: true },
+    { label: "Cashier Management", icon: UsersIcon, path: "/admin/cashiers", adminOnly: true },
   ];
 
-  const navItems = allNavItems.filter((item) => !item.adminOnly || user?.role === "admin");
+  const navItems = allNavItems.filter((item) => !item.adminOnly || isAdmin);
 
 
   return (
