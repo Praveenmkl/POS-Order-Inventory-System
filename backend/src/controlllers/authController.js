@@ -3,52 +3,33 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const registerUser = async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-    });
-
-    res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Registration failed",
-      error: error.message,
-    });
-  }
+  return res.status(403).json({
+    message: "Public self-registration is disabled. Cashier and staff accounts must be created by an Administrator via Cashier Management.",
+  });
 };
 
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Please provide both email and password",
+      });
+    }
+
+    const cleanEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: cleanEmail });
 
     if (!user) {
       return res.status(401).json({
         message: "Invalid email or password",
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        message: "Account deactivated. Please contact your system administrator.",
       });
     }
 
@@ -60,10 +41,12 @@ const loginUser = async (req, res) => {
       });
     }
 
+    const normalizedRole = user.role ? String(user.role).toUpperCase() : "CASHIER";
+
     const token = jwt.sign(
       {
         userId: user._id,
-        role:user.role,
+        role: normalizedRole,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
@@ -76,7 +59,8 @@ const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: normalizedRole,
+        isActive: user.isActive !== false,
       },
     });
   } catch (error) {

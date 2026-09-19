@@ -3,18 +3,16 @@ const bcrypt = require("bcryptjs");
 
 const seedAdmin = async () => {
   try {
-    const existingAdmin = await User.findOne({
-      role: { $in: ["ADMIN", "admin"] },
-    });
+    const adminEmail = (process.env.ADMIN_EMAIL || "admin@pos.com").toLowerCase().trim();
+    const adminPassword = process.env.ADMIN_PASSWORD || "admin12345";
 
-    if (!existingAdmin) {
-      console.log("No ADMIN user found. Seeding default ADMIN account...");
+    let adminUser = await User.findOne({ email: adminEmail });
 
-      const adminEmail = (process.env.ADMIN_EMAIL || "admin@pos.com").toLowerCase().trim();
-      const adminPassword = process.env.ADMIN_PASSWORD || "admin12345";
+    if (!adminUser) {
+      console.log(`Creating default ADMIN account (${adminEmail})...`);
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-      const newAdmin = await User.create({
+      adminUser = await User.create({
         name: "System Administrator",
         email: adminEmail,
         password: hashedPassword,
@@ -22,7 +20,15 @@ const seedAdmin = async () => {
         isActive: true,
       });
 
-      console.log(`Default ADMIN created: ${newAdmin.email}`);
+      console.log(`Default ADMIN account created: ${adminUser.email}`);
+    } else {
+      // Ensure existing admin account is active and has proper role
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      adminUser.password = hashedPassword;
+      adminUser.role = "ADMIN";
+      adminUser.isActive = true;
+      await adminUser.save();
+      console.log(`Default ADMIN account updated and active: ${adminUser.email}`);
     }
   } catch (error) {
     console.error("Error seeding admin user:", error.message);
