@@ -18,16 +18,9 @@ dotenv.config();
 const app = express();
 
 // Support multiple frontend URLs (comma-separated in env)
-const allowedOrigins = [
- process.env.FRONTEND_URL
-];
-
-if (process.env.FRONTEND_URL) {
-  process.env.FRONTEND_URL.split(",").forEach((url) => {
-    const trimmed = url.trim();
-    if (trimmed) allowedOrigins.push(trimmed);
-  });
-}
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(",").map((url) => url.trim()).filter(Boolean)
+  : [];
 
 // Handle CORS preflight (OPTIONS) requests explicitly
 app.options("*", cors({
@@ -56,11 +49,17 @@ app.use(
 );
 app.use(express.json());
 
+// Track one-time initialization (safe across warm serverless invocations)
+let initialized = false;
+
 // Middleware to ensure DB connection on serverless requests
 app.use(async (req, res, next) => {
   try {
     await connectDB();
-    await seedAdmin();
+    if (!initialized) {
+      await seedAdmin();
+      initialized = true;
+    }
     next();
   } catch (err) {
     res.status(500).json({ error: "Database connection failed", details: err.message });
