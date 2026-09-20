@@ -17,7 +17,23 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL, "http://localhost:5173"]
+  : ["http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, Postman, curl)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Middleware to ensure DB connection on serverless requests
