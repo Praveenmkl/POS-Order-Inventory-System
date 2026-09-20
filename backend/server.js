@@ -23,7 +23,7 @@ const allowedOrigins = process.env.FRONTEND_URL
   : [];
 
 // Handle CORS preflight (OPTIONS) requests explicitly
-app.options("*", cors({
+app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
