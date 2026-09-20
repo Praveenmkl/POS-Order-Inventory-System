@@ -16,7 +16,9 @@ const AdminRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== "admin") {
+  const userRoleUpper = user?.role ? String(user.role).toUpperCase() : "";
+
+  if (userRoleUpper !== "ADMIN") {
     return <Navigate to="/pos" replace />;
   }
 

@@ -9,6 +9,7 @@ import {
   CheckCircle,
   XCircle,
   Loader,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,70 @@ import EmptyState from "@/components/shared/EmptyState";
 import ErrorState from "@/components/shared/ErrorState";
 import orderService from "@/services/orderService";
 import { useAuth } from "@/context/AuthContext";
+
+const handlePrintReceipt = (order) => {
+  if (!order) return;
+  const printWindow = window.open("", "_blank", "width=400,height=600");
+  if (!printWindow) return;
+
+  const itemsHtml = (order.items || [])
+    .map(
+      (item) => `
+    <tr>
+      <td style="padding: 4px 0;">${item.name} x${item.quantity}</td>
+      <td style="padding: 4px 0; text-align: right;">Rs. ${Number(item.subtotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+    </tr>
+  `
+    )
+    .join("");
+
+  const formattedDate = new Date(order.createdAt).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Receipt - #${order._id?.slice(-8).toUpperCase()}</title>
+        <style>
+          body { font-family: monospace; padding: 20px; max-width: 300px; margin: auto; }
+          h2 { text-align: center; margin-bottom: 4px; }
+          p { text-align: center; margin-top: 0; font-size: 12px; color: #555; }
+          .divider { border-top: 1px dashed #000; margin: 10px 0; }
+          table { width: 100%; font-size: 13px; border-collapse: collapse; }
+          .total { font-weight: bold; font-size: 15px; margin-top: 10px; display: flex; justify-content: space-between; }
+          .footer { text-align: center; margin-top: 20px; font-size: 11px; }
+        </style>
+      </head>
+      <body>
+        <h2>POS STORE</h2>
+        <p>Receipt #${order._id?.slice(-8).toUpperCase()}<br/>${formattedDate}</p>
+        <div class="divider"></div>
+        <table>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        <div class="divider"></div>
+        <div class="total">
+          <span>TOTAL:</span>
+          <span>Rs. ${Number(order.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+        </div>
+        <div class="divider"></div>
+        <p class="footer">Thank you for your business!<br/>Status: ${(order.status || "").toUpperCase()}</p>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          };
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
 
 const STATUS_CONFIG = {
   pending:    { label: "Pending",    color: "bg-amber-100 text-amber-700 border-amber-200",   dot: "bg-amber-500",   icon: Clock },
@@ -89,11 +154,22 @@ const OrderDetailModal = ({ open, onOpenChange, order, onStatusUpdate, isAdmin }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            Order Details
-            <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.color}`}>
-              {cfg.label}
-            </span>
+          <DialogTitle className="flex items-center justify-between gap-3 pr-6">
+            <div className="flex items-center gap-2">
+              <span>Order Details</span>
+              <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${cfg.color}`}>
+                {cfg.label}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => handlePrintReceipt(order)}
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Print Receipt
+            </Button>
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-5 py-2">
@@ -462,6 +538,15 @@ const Orders = () => {
                           onClick={() => openDetail(order)}
                         >
                           Details
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => handlePrintReceipt(order)}
+                        >
+                          <Printer className="h-3 w-3" />
+                          Print
                         </Button>
                         {canCancel && (
                           <Button

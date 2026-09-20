@@ -5,22 +5,22 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
+    const savedUser = sessionStorage.getItem("user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [token, setToken] = useState(() => sessionStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
+    const savedToken = sessionStorage.getItem("token");
+    const savedUser = sessionStorage.getItem("user");
     if (savedToken && savedUser) {
       setToken(savedToken);
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
-        console.error("Failed to parse user from localStorage", e);
-        localStorage.removeItem("user");
+        console.error("Failed to parse user from sessionStorage", e);
+        sessionStorage.removeItem("user");
       }
     }
     setLoading(false);
@@ -30,8 +30,8 @@ export const AuthProvider = ({ children }) => {
     const response = await API.post("/auth/login", { email, password });
     const { token: receivedToken, user: receivedUser } = response.data;
 
-    localStorage.setItem("token", receivedToken);
-    localStorage.setItem("user", JSON.stringify(receivedUser));
+    sessionStorage.setItem("token", receivedToken);
+    sessionStorage.setItem("user", JSON.stringify(receivedUser));
 
     setToken(receivedToken);
     setUser(receivedUser);
@@ -50,8 +50,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     setToken(null);
     setUser(null);
   };

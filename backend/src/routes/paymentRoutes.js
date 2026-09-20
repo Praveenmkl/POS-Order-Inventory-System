@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { makePayment } = require("../controlllers/paymentController");
+const { makePayment } = require("../controllers/paymentController");
 
 const { protect } = require("../middleware/authMiddleware");
 

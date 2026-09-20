@@ -59,6 +59,7 @@ const orderSchema = new mongoose.Schema(
         "processing",
         "completed",
         "cancelled",
+        "refunded",
       ],
       default: "pending",
     },

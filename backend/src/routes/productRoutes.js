@@ -8,7 +8,7 @@ const {
     getProductById, 
     updateProduct, 
     deleteProduct
-} = require("../controlllers/productController");
+} = require("../controllers/productController");
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 

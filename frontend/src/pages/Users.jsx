@@ -44,7 +44,7 @@ const Users = () => {
       const res = await API.get("/users");
       setUsers(res.data);
     } catch (err) {
-      toast.error("Failed to load cashiers and users");
+      toast.error(err.response?.data?.message || "Failed to load cashiers and users");
     } finally {
       setLoading(false);
     }

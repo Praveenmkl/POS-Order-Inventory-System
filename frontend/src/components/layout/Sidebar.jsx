@@ -38,8 +38,8 @@ const Sidebar = ({ onClose }) => {
   const allNavItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard", adminOnly: true },
     { label: "POS Terminal", icon: ShoppingCart, path: "/pos", badge: itemCount > 0 ? itemCount : null },
+    { label: isAdmin ? "Orders" : "My Orders", icon: ClipboardList, path: isAdmin ? "/admin/orders" : "/orders" },
     { label: "Products", icon: Package, path: "/admin/products", adminOnly: true },
-    { label: "Orders", icon: ClipboardList, path: "/admin/orders", adminOnly: true },
     { label: "Cashier Management", icon: UsersIcon, path: "/admin/cashiers", adminOnly: true },
   ];
 

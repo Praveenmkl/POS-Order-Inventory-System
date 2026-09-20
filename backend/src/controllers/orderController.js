@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const Payment = require("../models/Payment");
 
 // Valid status transitions
 const VALID_TRANSITIONS = {
@@ -157,7 +157,7 @@ const getMyOrders = async (req, res) => {
 // Get all orders (admin only)
 const getAllOrders = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
+    if (String(req.user.role).toUpperCase() !== "ADMIN") {
       return res.status(403).json({
         message: "Access denied. Admin only.",
       });
@@ -203,7 +203,7 @@ const getOrderById = async (req, res) => {
     // Users can only view their own orders, admins can view any
     if (
       order.user._id.toString() !== req.user.userId &&
-      req.user.role !== "admin"
+      String(req.user.role).toUpperCase() !== "ADMIN"
     ) {
       return res.status(403).json({
         message: "Access denied",
@@ -222,7 +222,7 @@ const getOrderById = async (req, res) => {
 // Update order status (admin only)
 const updateOrderStatus = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
+    if (String(req.user.role).toUpperCase() !== "ADMIN") {
       return res.status(403).json({
         message: "Access denied. Admin only.",
       });
@@ -360,7 +360,7 @@ const refundOrder = async (req, res) => {
 
     if (
       order.user.toString() !== req.user.userId &&
-      req.user.role !== "admin"
+      String(req.user.role).toUpperCase() !== "ADMIN"
     ) {
       return res.status(403).json({
         message: "Access denied",
@@ -384,6 +384,12 @@ const refundOrder = async (req, res) => {
 
     order.status = "refunded";
     await order.save();
+
+    // Also update payment record if exists
+    await Payment.findOneAndUpdate(
+      { order: order._id },
+      { status: "refunded" }
+    );
 
     res.status(200).json({
       message: "Order refunded successfully and stock restored",

@@ -8,7 +8,7 @@ const {
   updateOrderStatus,
   cancelOrder,
   refundOrder,
-} = require("../controlllers/orderController");
+} = require("../controllers/orderController");
 
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
@@ -19,7 +19,7 @@ router.post("/checkout", protect, checkout);
 router.get("/my-orders", protect, getMyOrders);
 router.get("/:id", protect, getOrderById);
 router.patch("/:id/cancel", protect, cancelOrder);
-router.post("/:id/refund", protect, authorizeRoles("admin"), refundOrder);
+router.post("/:id/refund", protect, refundOrder);
 
 // Admin routes
 router.get("/", protect, authorizeRoles("admin"), getAllOrders);

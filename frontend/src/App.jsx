@@ -29,8 +29,9 @@ function App() {
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout />}>
-                {/* Cashier / Shared POS Route */}
+                {/* Cashier / Shared POS & Orders Routes */}
                 <Route path="/pos" element={<POS />} />
+                <Route path="/orders" element={<Orders />} />
 
                 {/* Admin Only Portal Routes */}
                 <Route element={<AdminRoute />}>
@@ -46,7 +47,6 @@ function App() {
                   <Route path="/products" element={<Navigate to="/admin/products" replace />} />
 
                   <Route path="/admin/orders" element={<Orders />} />
-                  <Route path="/orders" element={<Navigate to="/admin/orders" replace />} />
                 </Route>
               </Route>
             </Route>

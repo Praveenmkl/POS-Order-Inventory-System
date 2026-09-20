@@ -27,8 +27,10 @@ const protect = (req,res,next) =>{
 };
 
 const authorizeRoles = (...roles) => {
+    const uppercaseRoles = roles.map((r) => String(r).toUpperCase());
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
+        const userRoleUpper = req.user?.role ? String(req.user.role).toUpperCase() : "";
+        if (!req.user || !uppercaseRoles.includes(userRoleUpper)) {
             return res.status(403).json({
                 message: `User role '${req.user?.role}' is not authorized to access this route`,
             });
