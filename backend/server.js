@@ -19,8 +19,7 @@ const app = express();
 
 // Support multiple frontend URLs (comma-separated in env)
 const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5174",
+ process.env.FRONTEND_URL
 ];
 
 if (process.env.FRONTEND_URL) {
